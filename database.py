@@ -2,10 +2,10 @@ from sqlalchemy import create_engine, Column, Integer, String, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from datetime import datetime
+import os
 
-# This creates a local SQLite file called logs.db
-# In production you'd swap this URL for PostgreSQL
-ENGINE = create_engine("sqlite:///logs.db", connect_args={"check_same_thread": False})
+DB_PATH = os.environ.get("DATABASE_URL", "sqlite:///logs.db")
+ENGINE = create_engine(DB_PATH, connect_args={"check_same_thread": False})
 
 Base = declarative_base()
 
