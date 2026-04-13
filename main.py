@@ -36,6 +36,9 @@ model.fit(texts, labels)
 class LogEntry(BaseModel):
     message: str
 
+class BulkLogRequest(BaseModel):
+    messages: list[str]
+
 @app.get("/")
 def root():
     return {"status": "log classifier running"}
@@ -59,3 +62,18 @@ def get_logs():
     logs = db.query(LogRecord).all()
     db.close()
     return [{"id": l.id, "message": l.message, "label": l.label, "timestamp": l.timestamp} for l in logs]
+
+@app.post("/classify/bulk")
+def classify_bulk(request: BulkLogRequest):
+    results = []
+    db = SessionLocal()
+
+    for message in request.messages:
+        label = model.predict([message])[0]
+        record = LogRecord(message=message, label=label)
+        db.add(record)
+        results.append({"message": message, "label": label})
+
+    db.commit()
+    db.close()
+    return {"results": results, "total": len(results)}
