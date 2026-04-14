@@ -5,7 +5,7 @@ from sqlalchemy.orm import sessionmaker
 from datetime import datetime
 
 # You can set the DATABASE_URL environment variable to point to your database, or it will default to a local SQLite database named logs.db
-DB_PATH = os.environ.get("DATABASE_URL", "sqlite:///logs.db")
+DATABASE_URL = os.environ.get("DATABASE_URL", "sqlite:///logs.db")
 
 if DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
