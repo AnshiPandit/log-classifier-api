@@ -10,6 +10,7 @@ from fastapi.responses import HTMLResponse
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
+
 # Training data — logs and their correct labels
 TRAINING_DATA = [
     ("ERROR: database connection failed", "ERROR"),
@@ -26,6 +27,7 @@ TRAINING_DATA = [
     ("info: job completed", "INFO"),
 ]
 
+
 texts = [item[0] for item in TRAINING_DATA]
 labels = [item[1] for item in TRAINING_DATA]
 
@@ -36,11 +38,13 @@ model = Pipeline([
 ])
 model.fit(texts, labels)
 
+
 class LogEntry(BaseModel):
     message: str
 
 class BulkLogRequest(BaseModel):
     messages: list[str]
+
 
 # This is what runs in the background after response is sent
 def save_to_db(message: str, label: str):
@@ -50,6 +54,7 @@ def save_to_db(message: str, label: str):
     db.commit()
     db.close()   
 
+
 def save_bulk_to_db(results: list[dict]):
     db = SessionLocal()
     for item in results:
@@ -58,15 +63,18 @@ def save_bulk_to_db(results: list[dict]):
     db.commit()
     db.close()
 
+
 @app.get("/")
 def root():
     return {"status": "log classifier running"}
+
 
 @app.post("/classify")
 def classify(log: LogEntry, background_tasks: BackgroundTasks):
     label = model.predict([log.message])[0]
     background_tasks.add_task(save_to_db, log.message, label)
     return {"message": log.message, "label": label}
+
 
 @app.post("/classify/bulk")
 def classify_bulk(request: BulkLogRequest, background_tasks: BackgroundTasks):
@@ -77,12 +85,14 @@ def classify_bulk(request: BulkLogRequest, background_tasks: BackgroundTasks):
     background_tasks.add_task(save_bulk_to_db, results)
     return {"results": results, "total": len(results)}
 
+
 @app.get("/logs")
 def get_logs():
     db = SessionLocal()
     logs = db.query(LogRecord).all()
     db.close()
     return [{"id": l.id, "message": l.message, "label": l.label, "timestamp": l.timestamp} for l in logs]
+
 
 @app.get("/dashboard", response_class=HTMLResponse)
 def dashboard():
