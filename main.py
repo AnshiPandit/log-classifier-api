@@ -4,8 +4,11 @@ from sklearn.pipeline import Pipeline
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
 from database import SessionLocal, LogRecord
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import HTMLResponse
 
 app = FastAPI()
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # Training data — logs and their correct labels
 TRAINING_DATA = [
@@ -73,10 +76,15 @@ def classify_bulk(request: BulkLogRequest, background_tasks: BackgroundTasks):
     ]
     background_tasks.add_task(save_bulk_to_db, results)
     return {"results": results, "total": len(results)}
-    
+
 @app.get("/logs")
 def get_logs():
     db = SessionLocal()
     logs = db.query(LogRecord).all()
     db.close()
     return [{"id": l.id, "message": l.message, "label": l.label, "timestamp": l.timestamp} for l in logs]
+
+@app.get("/dashboard", response_class=HTMLResponse)
+def dashboard():
+    return open("static/index.html").read()
+

@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Log Classifier Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, sans-serif; background: #0f172a; color: #e2e8f0; padding: 2rem; }
+    h1 { font-size: 1.5rem; margin-bottom: 0.25rem; color: #f8fafc; }
+    .subtitle { color: #64748b; font-size: 0.875rem; margin-bottom: 2rem; }
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+    .card { background: #1e293b; border-radius: 12px; padding: 1.25rem; }
+    .card .label { font-size: 0.75rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; }
+    .card .value { font-size: 2rem; font-weight: 700; margin-top: 0.25rem; }
+    .error { color: #f87171; }
+    .warning { color: #fbbf24; }
+    .info { color: #34d399; }
+    .unknown { color: #94a3b8; }
+    .total { color: #818cf8; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem; }
+    .panel { background: #1e293b; border-radius: 12px; padding: 1.5rem; }
+    .panel h2 { font-size: 0.875rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 1rem; }
+    .chart-wrap { position: relative; height: 220px; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+    th { text-align: left; color: #64748b; font-weight: 500; padding: 0.5rem 0.75rem; border-bottom: 1px solid #334155; }
+    td { padding: 0.6rem 0.75rem; border-bottom: 1px solid #1e293b; }
+    tr:hover td { background: #263548; }
+    .badge { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600; }
+    .badge.ERROR { background: #450a0a; color: #f87171; }
+    .badge.WARNING { background: #451a03; color: #fbbf24; }
+    .badge.INFO { background: #052e16; color: #34d399; }
+    .badge.UNKNOWN { background: #1e293b; color: #94a3b8; border: 1px solid #334155; }
+    @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <h1>🔍 Log Classifier Dashboard</h1>
+  <p class="subtitle">Real-time classification overview</p>
+
+  <div class="cards">
+    <div class="card"><div class="label">Total</div><div class="value total" id="total">—</div></div>
+    <div class="card"><div class="label">Errors</div><div class="value error" id="count-ERROR">—</div></div>
+    <div class="card"><div class="label">Warnings</div><div class="value warning" id="count-WARNING">—</div></div>
+    <div class="card"><div class="label">Info</div><div class="value info" id="count-INFO">—</div></div>
+    <div class="card"><div class="label">Unknown</div><div class="value unknown" id="count-UNKNOWN">—</div></div>
+  </div>
+
+  <div class="grid">
+    <div class="panel">
+      <h2>Distribution</h2>
+      <div class="chart-wrap"><canvas id="donut"></canvas></div>
+    </div>
+    <div class="panel">
+      <h2>Recent Logs</h2>
+      <table>
+        <thead><tr><th>#</th><th>Message</th><th>Label</th></tr></thead>
+        <tbody id="log-table"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    async function load() {
+      const res = await fetch('/logs');
+      const logs = await res.json();
+
+      const counts = { ERROR: 0, WARNING: 0, INFO: 0, UNKNOWN: 0 };
+      logs.forEach(l => { if (counts[l.label] !== undefined) counts[l.label]++; });
+
+      document.getElementById('total').textContent = logs.length;
+      Object.keys(counts).forEach(k => {
+        document.getElementById('count-' + k).textContent = counts[k];
+      });
+
+      // Donut chart
+      new Chart(document.getElementById('donut'), {
+        type: 'doughnut',
+        data: {
+          labels: ['ERROR', 'WARNING', 'INFO', 'UNKNOWN'],
+          datasets: [{
+            data: [counts.ERROR, counts.WARNING, counts.INFO, counts.UNKNOWN],
+            backgroundColor: ['#f87171', '#fbbf24', '#34d399', '#94a3b8'],
+            borderWidth: 0
+          }]
+        },
+        options: {
+          cutout: '70%',
+          plugins: { legend: { labels: { color: '#94a3b8' } } }
+        }
+      });
+
+      // Table — last 10 logs
+      const tbody = document.getElementById('log-table');
+      logs.slice(-10).reverse().forEach(l => {
+        tbody.innerHTML += `<tr>
+          <td style="color:#475569">${l.id}</td>
+          <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${l.message}</td>
+          <td><span class="badge ${l.label}">${l.label}</span></td>
+        </tr>`;
+      });
+    }
+    load();
+  </script>
+</body>
+</html>
