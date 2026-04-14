@@ -16,7 +16,7 @@ if "neon.tech" in DATABASE_URL and "sslmode" not in DATABASE_URL:
 
 connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
 
-ENGINE = create_engine(DB_PATH, connect_args=connect_args)
+ENGINE = create_engine(DATABASE_URL, connect_args=connect_args)
 
 Base = declarative_base()
 
