@@ -98,3 +98,14 @@ def get_logs():
 def dashboard():
     return open("static/index.html").read()
 
+@app.get("/db-check")
+def db_check():
+    import os
+    url = os.environ.get("DATABASE_URL", "NOT SET")
+    if "neon.tech" in url:
+        return {"database": "neon_postgresql"}
+    elif url == "NOT SET":
+        return {"database": "sqlite_local"}
+    else:
+        return {"database": "other"}
+

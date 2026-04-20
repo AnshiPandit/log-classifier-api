@@ -7,12 +7,13 @@ from datetime import datetime
 # You can set the DATABASE_URL environment variable to point to your database, or it will default to a local SQLite database named logs.db
 DATABASE_URL = os.environ.get("DATABASE_URL", "sqlite:///logs.db")
 
+# Railway gives postgres:// but SQLAlchemy needs postgresql://
 if DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
-# SSL required for Neon
-if "neon.tech" in DATABASE_URL and "sslmode" not in DATABASE_URL:
-    DATABASE_URL += "?sslmode=require"
+# Remove channel_binding if present — not supported by SQLAlchemy
+if "channel_binding" in DATABASE_URL:
+    DATABASE_URL = DATABASE_URL.split("?")[0] + "?sslmode=require"
 
 connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
 
