@@ -101,7 +101,7 @@ def dashboard():
 @app.get("/db-check")
 def db_check():
     import os
-    url = os.environ.get("DATABASE_URL", "NOT SET")
+    url = os.environ.get("NEON_DATABASE_URL", "NOT SET")
     if "neon.tech" in url:
         return {"database": "neon_postgresql", "url": url}
     elif url == "NOT SET":
