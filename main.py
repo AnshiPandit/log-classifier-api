@@ -103,9 +103,9 @@ def db_check():
     import os
     url = os.environ.get("DATABASE_URL", "NOT SET")
     if "neon.tech" in url:
-        return {"database": "neon_postgresql"}
+        return {"database": "neon_postgresql", "url": url}
     elif url == "NOT SET":
-        return {"database": "sqlite_local"}
+        return {"database": "sqlite_local", "url": url}
     else:
-        return {"database": "other"}
+        return {"database": "other", "url": url}
 
