@@ -5,7 +5,10 @@ from sqlalchemy.orm import sessionmaker
 from datetime import datetime
 
 # You can set the DATABASE_URL environment variable to point to your database, or it will default to a local SQLite database named logs.db
-DATABASE_URL = os.environ.get("DATABASE_URL", "sqlite:///logs.db")
+DATABASE_URL = (
+    os.environ.get("NEON_DATABASE_URL") or
+    os.environ.get("DATABASE_URL", "sqlite:///logs.db")) or
+    "sqlite:///logs.db"
 
 # Railway gives postgres:// but SQLAlchemy needs postgresql://
 if DATABASE_URL.startswith("postgres://"):
